@@ -12,6 +12,7 @@ struct CarrosselView: View {
             if carregando {
                 ProgressView("Carregando imagens...")
                     .tint(.purple)
+                    .foregroundStyle(.white)
 
             } else if viewModel.Planetas.isEmpty {
                 Text("Não foi possível carregar as imagens.")
@@ -21,11 +22,13 @@ struct CarrosselView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 15) {
                         ForEach(viewModel.Planetas, id: \.date) { planeta in
-                            NavigationLink(value: planeta) {
-                                VStack(alignment: .leading, spacing: 10) {
+                            NavigationLink {
+                                DetalhesView(planeta: planeta)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 10)  {
                                     if planeta.media_type == "image" {
                                         AsyncImage(
-                                            url: URL(string: planeta.url)
+                                            url: URL(string: planeta.hdurl ?? planeta.url)
                                         ) { fase in
                                             if let imagem = fase.image {
                                                 imagem
@@ -33,12 +36,14 @@ struct CarrosselView: View {
                                                     .scaledToFill()
                                             } else if fase.error != nil {
                                                 Image(systemName: "photo")
+                                                    .foregroundStyle(.white)
                                                     .frame(
                                                         width: 230,
                                                         height: 150
                                                     )
                                             } else {
                                                 ProgressView()
+                                                    .tint(.purple)
                                                     .frame(
                                                         width: 230,
                                                         height: 150
@@ -78,12 +83,11 @@ struct CarrosselView: View {
         .background(Color.black)
         .navigationTitle(titulo)
         .task {
-            await viewModel.QualidadePlanetario()
+            carregando = true
+            await viewModel.QualidadePlanetario(categoria: titulo)
             carregando = false
         }
-        .navigationDestination(for: NasaPlanet.self) { planeta in
-            DetalhesView(planeta: planeta)
-        }
+      
     }
 }
 
